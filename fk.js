@@ -19,12 +19,12 @@ var sendFeedback = function (event) {
 var openFeedbackForm = function () {
     container.style.right = "0px";
     button.style.opacity = "0";
-    button.style.transform = "rotate(90deg)";
+    button.style.transform = "rotate(45deg)";
 }
 
 var closeFeedbackForm = function () {
     form["feedback"].value = "";
-    button.style.transform = "rotate(-90deg)";
+    button.style.transform = "rotate(-45deg)";
     button.style.opacity = "1";
     container.style.right = "-248px";
 }
