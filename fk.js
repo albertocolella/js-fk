@@ -1,46 +1,111 @@
 ////
 // DOM section
 ////
-var feedback = function(){
-    ////
-    // function section
-    ////
-    var sendFeedback = function (event) {
-        event.preventDefault();
-        var feedback = this["feedback"].value;
-        if (feedback == null || feedback == "") {
-            alert("You have to fill the Feedback field");
-            return false;
-        }
-        else {
-            alert(feedback);
-            closeFeedbackForm();
-            return false;
-        }
-    }
+var fdk;
 
-    var openFeedbackForm = function () {
-        container.style.right = "0px";
-        button.style.opacity = "0";
-        button.style.transform = "rotate(90deg)";
+var Feedback = function(settings){
+    this.container = {};
+    this.form = {};
+    this.settings = {};
+    this.settings.timing = 3000;
+    this.settings.button_shown_at_build = false;
+    this.settings.button_shown_after_close = true;
+    this.settings.closing_button_shown = true;
+    if(settings && settings.hasOwnProperty('timing')){
+        this.settings.timing = settings.timing;
     }
+    if(settings && settings.hasOwnProperty('button_shown_at_build')){
+        this.settings.button_shown_at_build = settings.button_shown_at_build;
+    }
+    if(settings && settings.hasOwnProperty('button_shown_after_close')){
+        this.settings.button_shown_after_close = settings.button_shown_after_close;
+    }
+    if(settings && settings.hasOwnProperty('closing_button_shown')){
+        this.settings.closing_button_shown = settings.closing_button_shown;
+    }
+};
 
-    var closeFeedbackForm = function () {
-        form["feedback"].value = "";
-        button.style.transform = "rotate(-90deg)";
-        button.style.opacity = "1";
-        container.style.right = "-248px";
+Feedback.prototype.openFeedbackForm = function () {
+    this.container.style.right = "0px";
+    var button_opacity = "0";
+    if(this.settings.closing_button_shown){
+        button_opacity = "1";
+        this.button.addEventListener("click", this.closeFeedbackForm.bind(this));
     }
+    this.button.style.opacity = button_opacity;
+    this.button.style.transform = "rotate(90deg)";
+}
+
+Feedback.prototype.closeFeedbackForm = function () {
+    this.form["feedback"].value = "";
+    if(this.settings.button_shown_after_close){
+        this.button.style.opacity = "1";
+    }
+    this.button.addEventListener("click", this.openFeedbackForm.bind(this));
+    this.button.style.transform = "rotate(-90deg)";
+    this.container.style.right = "-248px";
+}
+
+Feedback.prototype.sendFeedback = function (event) {
+    event.preventDefault();
+    var feedback = event.target["feedback"].value;
+    if (feedback == null || feedback == "") {
+        alert("You have to fill the Feedback field");
+        return false;
+    }
+    else {
+        alert(feedback);
+        this.closeFeedbackForm();
+        return false;
+    }
+}
     
+Feedback.prototype.buildUp = function(){
     // fk button
-    var container = document.createElement("DIV");
-    container.className = "fk-button";
-    container.style.position = "fixed";
-    container.style.top = "200px";
-    container.style.right = "-248px";
-    container.style.transition = "all 1s ease-in-out";
+    this.container = document.createElement("DIV");
+    this.container.className = "fk-button";
+    this.container.style.position = "fixed";
+    this.container.style.top = "200px";
+    this.container.style.right = "-248px";
+    this.container.style.transition = "all 1s ease-in-out";
 
-    // button button
+    // feedback form
+    this.form = document.createElement("FORM");
+    this.form.method = "post";
+    this.form.setAttribute("id","fk-form");
+    this.form.style.width = "250px";
+    this.form.style.display = "inline-block";
+    this.form.style.textAlign = "center";
+    this.form.style.padding = "1em 0";
+    this.form.style.boxShadow = "0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28)";
+    this.form.style.backgroundColor = "#EEE";
+    
+    this.button = this.buildButton();
+    if(!this.settings.button_shown_at_build){
+        this.button.style.opacity = "0";
+    }
+    this.container.appendChild(this.button);
+    
+    //input element, text
+    var i = document.createElement("TEXTAREA");
+    i.setAttribute("name","feedback");
+    i.style.width = "90%";
+    i.style.height = "100px";
+
+    //input element, Submit button
+    var s = document.createElement("INPUT");
+    s.setAttribute("type","submit");
+    s.setAttribute("value","Submit");
+    s.style.marginTop = "1em";
+    
+    this.form.appendChild(i);
+    this.form.appendChild(s);
+    
+    this.form.addEventListener("submit", this.sendFeedback.bind(this), false);
+    this.container.appendChild(this.form);    
+};
+
+Feedback.prototype.buildButton = function(){
     var button = document.createElement("DIV");
     button.className = "button";
     button.style.position = "relative";
@@ -63,48 +128,37 @@ var feedback = function(){
     image.style.top = "0";
     image.style.marginLeft = "5px";
     image.style.marginTop = "5px";
-
-    // feedback form
-    var form = document.createElement("FORM");
-    form.method = "post";
-    form.setAttribute("id","fk-form");
-    form.style.width = "250px";
-    form.style.display = "inline-block";
-    form.style.textAlign = "center";
-    form.style.padding = "1em 0";
-    form.style.boxShadow = "0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28)";
-    form.style.backgroundColor = "#EEE";
-
-    //input element, text
-    var i = document.createElement("TEXTAREA");
-    i.setAttribute("name","feedback");
-    i.style.width = "90%";
-    i.style.height = "100px";
-
-    //input element, Submit button
-    var s = document.createElement("INPUT");
-    s.setAttribute("type","submit");
-    s.setAttribute("value","Submit");
-    s.style.marginTop = "1em";
-
-    form.appendChild(i);
-    form.appendChild(s);
-    form.addEventListener("submit", sendFeedback, false);
-
+    
     // add element to button
     button.appendChild(image);
-    container.appendChild(button);
-    container.appendChild(form);
-
     // add event on button click
-    button.addEventListener("click", openFeedbackForm);
+    button.addEventListener("click", this.openFeedbackForm.bind(this));
+    // this.container.appendChild(button);
+    return button;
+};
 
-    // append fk to the document
+// append fk to the document
+Feedback.prototype.appendToBody = function(){
     if(document.body != null){ 
-        document.body.appendChild(container); 
+        this.buildUp();
+        document.body.appendChild(this.container);        
+        setTimeout(function(){           
+            this.openFeedbackForm();
+        }.bind(this), this.settings.timing);
     }
 };
 
+    
+var init_feedback = function(){
+    // ajax call to get feedback params
+    var settings = {
+        timing: 2000
+    };    
+    fdk = new Feedback(settings);
+    fdk.appendToBody();
+};
+
+
 document.addEventListener('DOMContentLoaded', function() {
-    document.body.onload = feedback();
+    document.body.onload = init_feedback();
 });
