@@ -6,31 +6,42 @@ var fdk;
 var Feedback = function(settings){
     this.container = {};
     this.form = {};
-    this.timing = 3000;
-    this.button_shown_at_build = false;
-    this.button_shown_after_close = true
+    this.settings = {};
+    this.settings.timing = 3000;
+    this.settings.button_shown_at_build = false;
+    this.settings.button_shown_after_close = true;
+    this.settings.closing_button_shown = true;
     if(settings && settings.hasOwnProperty('timing')){
-        this.timing = settings.timing;
+        this.settings.timing = settings.timing;
     }
     if(settings && settings.hasOwnProperty('button_shown_at_build')){
-        this.button_shown_at_build = settings.button_shown_at_build;
+        this.settings.button_shown_at_build = settings.button_shown_at_build;
     }
     if(settings && settings.hasOwnProperty('button_shown_after_close')){
-        this.button_shown_after_close = settings.button_shown_after_close;
+        this.settings.button_shown_after_close = settings.button_shown_after_close;
+    }
+    if(settings && settings.hasOwnProperty('closing_button_shown')){
+        this.settings.closing_button_shown = settings.closing_button_shown;
     }
 };
 
 Feedback.prototype.openFeedbackForm = function () {
     this.container.style.right = "0px";
-    this.button.style.opacity = "0";
+    var button_opacity = "0";
+    if(this.settings.closing_button_shown){
+        button_opacity = "1";
+        this.button.addEventListener("click", this.closeFeedbackForm.bind(this));
+    }
+    this.button.style.opacity = button_opacity;
     this.button.style.transform = "rotate(90deg)";
 }
 
 Feedback.prototype.closeFeedbackForm = function () {
     this.form["feedback"].value = "";
-    if(this.button_shown_after_close){
+    if(this.settings.button_shown_after_close){
         this.button.style.opacity = "1";
     }
+    this.button.addEventListener("click", this.openFeedbackForm.bind(this));
     this.button.style.transform = "rotate(-90deg)";
     this.container.style.right = "-248px";
 }
@@ -70,7 +81,7 @@ Feedback.prototype.buildUp = function(){
     this.form.style.backgroundColor = "#EEE";
     
     this.button = this.buildButton();
-    if(!this.button_shown_at_build){
+    if(!this.settings.button_shown_at_build){
         this.button.style.opacity = "0";
     }
     this.container.appendChild(this.button);
@@ -133,7 +144,7 @@ Feedback.prototype.appendToBody = function(){
         document.body.appendChild(this.container);        
         setTimeout(function(){           
             this.openFeedbackForm();
-        }.bind(this), this.timing);
+        }.bind(this), this.settings.timing);
     }
 };
 
