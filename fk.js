@@ -22,18 +22,16 @@ var Feedback = function(settings){
 
 Feedback.prototype.openFeedbackForm = function () {
     this.container.style.right = "0px";
-    if(this.button_shown_at_build){
-        this.button.style.opacity = "0";
-        this.button.style.transform = "rotate(90deg)";
-    }
+    this.button.style.opacity = "0";
+    this.button.style.transform = "rotate(90deg)";
 }
 
 Feedback.prototype.closeFeedbackForm = function () {
     this.form["feedback"].value = "";
     if(this.button_shown_after_close){
-        this.button.style.transform = "rotate(-90deg)";
         this.button.style.opacity = "1";
     }
+    this.button.style.transform = "rotate(-90deg)";
     this.container.style.right = "-248px";
 }
 
