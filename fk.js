@@ -7,8 +7,8 @@ var Feedback = function(settings){
     this.container = {};
     this.form = {};
     this.timing = 3000;
-    this.button_shown_at_build = true;
-    this.button_shown_after_close = false
+    this.button_shown_at_build = false;
+    this.button_shown_after_close = true
     if(settings && settings.hasOwnProperty('timing')){
         this.timing = settings.timing;
     }
@@ -71,38 +71,11 @@ Feedback.prototype.buildUp = function(){
     this.form.style.boxShadow = "0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28)";
     this.form.style.backgroundColor = "#EEE";
     
-    if(this.button_shown_at_build){
-        // button button
-        this.button = document.createElement("DIV");
-        this.button.className = "button";
-        this.button.style.position = "relative";
-        this.button.style.backgroundColor = "#db4437";
-        this.button.style.height = "56px";
-        this.button.style.width = "56px";
-        this.button.style.borderRadius = "50%";
-        this.button.style.boxShadow = "0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28)";
-        this.button.style.cursor = "pointer";
-        this.button.style.display = "inline-block";
-        this.button.style.opacity = "1";
-        this.button.style.transition = "all 1s ease-in-out";
-        this.button.style.verticalAlign = "top";
-
-        // button image
-        var image = document.createElement("IMG");
-        image.src = "https://ssl.gstatic.com/bt/C3341AA7A1A076756462EE2E5CD71C11/2x/bt_speed_dial_2x.png";
-        image.style.position = "absolute";
-        image.style.left = "0";
-        image.style.top = "0";
-        image.style.marginLeft = "5px";
-        image.style.marginTop = "5px";
-        
-        // add element to button
-        this.button.appendChild(image);
-        this.container.appendChild(this.button);
-        
-        // add event on button click
-        this.button.addEventListener("click", this.openFeedbackForm.bind(this));
+    this.button = this.buildButton();
+    if(!this.button_shown_at_build){
+        this.button.style.opacity = "0";
     }
+    this.container.appendChild(this.button);
     
     //input element, text
     var i = document.createElement("TEXTAREA");
@@ -121,6 +94,38 @@ Feedback.prototype.buildUp = function(){
     
     this.form.addEventListener("submit", this.sendFeedback.bind(this), false);
     this.container.appendChild(this.form);    
+};
+
+Feedback.prototype.buildButton = function(){
+    var button = document.createElement("DIV");
+    button.className = "button";
+    button.style.position = "relative";
+    button.style.backgroundColor = "#db4437";
+    button.style.height = "56px";
+    button.style.width = "56px";
+    button.style.borderRadius = "50%";
+    button.style.boxShadow = "0 0 4px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.28)";
+    button.style.cursor = "pointer";
+    button.style.display = "inline-block";
+    button.style.opacity = "1";
+    button.style.transition = "all 1s ease-in-out";
+    button.style.verticalAlign = "top";
+
+    // button image
+    var image = document.createElement("IMG");
+    image.src = "https://ssl.gstatic.com/bt/C3341AA7A1A076756462EE2E5CD71C11/2x/bt_speed_dial_2x.png";
+    image.style.position = "absolute";
+    image.style.left = "0";
+    image.style.top = "0";
+    image.style.marginLeft = "5px";
+    image.style.marginTop = "5px";
+    
+    // add element to button
+    button.appendChild(image);
+    // add event on button click
+    button.addEventListener("click", this.openFeedbackForm.bind(this));
+    // this.container.appendChild(button);
+    return button;
 };
 
 // append fk to the document
