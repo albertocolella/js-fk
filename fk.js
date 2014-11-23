@@ -3,7 +3,7 @@
 ////
 var fdk;
 
-var Feedback = function(settings){
+var Feedback = function(response){
     this.container = {};
     this.form = {};
     this.settings = {};
@@ -11,17 +11,20 @@ var Feedback = function(settings){
     this.settings.button_shown_at_build = false;
     this.settings.button_shown_after_close = true;
     this.settings.closing_button_shown = true;
-    if(settings && settings.hasOwnProperty('timing')){
-        this.settings.timing = settings.timing;
+    if(response && response.hasOwnProperty('timing')){
+        this.settings.timing = response.timing;
     }
-    if(settings && settings.hasOwnProperty('button_shown_at_build')){
-        this.settings.button_shown_at_build = settings.button_shown_at_build;
+    if(response && response.hasOwnProperty('button_shown_at_build')){
+        this.settings.button_shown_at_build = response.button_shown_at_build;
     }
-    if(settings && settings.hasOwnProperty('button_shown_after_close')){
-        this.settings.button_shown_after_close = settings.button_shown_after_close;
+    if(response && response.hasOwnProperty('button_shown_after_close')){
+        this.settings.button_shown_after_close = response.button_shown_after_close;
     }
-    if(settings && settings.hasOwnProperty('closing_button_shown')){
-        this.settings.closing_button_shown = settings.closing_button_shown;
+    if(response && response.hasOwnProperty('closing_button_shown')){
+        this.settings.closing_button_shown = response.closing_button_shown;
+    }
+    if(response && response.hasOwnProperty('survey')){
+        this.survey = response.survey;
     }
 };
 
@@ -48,6 +51,7 @@ Feedback.prototype.closeFeedbackForm = function () {
 
 Feedback.prototype.sendFeedback = function (event) {
     event.preventDefault();
+    console.log(event.target);
     var feedback = event.target["feedback"].value;
     if (feedback == null || feedback == "") {
         alert("You have to fill the Feedback field");
@@ -97,7 +101,7 @@ Feedback.prototype.buildUp = function(){
     s.setAttribute("type","submit");
     s.setAttribute("value","Submit");
     s.style.marginTop = "1em";
-    
+    this.form.appendChild(this.buildSurvey());
     this.form.appendChild(i);
     this.form.appendChild(s);
     
@@ -127,14 +131,72 @@ Feedback.prototype.buildButton = function(){
     image.style.left = "0";
     image.style.top = "0";
     image.style.marginLeft = "5px";
-    image.style.marginTop = "5px";
-    
+    image.style.marginTop = "5px";    
     // add element to button
     button.appendChild(image);
     // add event on button click
     button.addEventListener("click", this.openFeedbackForm.bind(this));
     // this.container.appendChild(button);
     return button;
+};
+
+Feedback.prototype.buildSurvey = function(){
+    if(this.survey && this.survey.hasOwnProperty('options')){
+        var div_survey = document.createElement("DIV");
+        for(var pos in this.survey.options){
+            var opts = this.buildForm(this.survey.options[pos]);
+            opts.forEach(function(opt){
+                div_survey.appendChild(opt);
+            });
+        }
+        return div_survey;
+    }
+};
+Feedback.prototype.buildForm = function(option){
+    var elements = [];
+    switch(option.type){
+        case 'radio':
+            opt = document.createElement("INPUT");
+            opt.setAttribute('type', 'radio');
+            opt.setAttribute('name', option.id);
+            opt.setAttribute('value', option.id);
+            opt.setAttribute('id', option.id);
+            opt.style.left = "0";
+            opt.style.top = "0";
+            opt.style.position = "absolute";
+            opt.style.opacity = "0";
+            label = document.createElement("LABEL");
+            label.setAttribute('for', option.id);
+            var text = document.createTextNode(option.label);
+            label.appendChild(text);
+            label.style.cursor = "pointer";
+            label.style.backgroundColor = "#D2D2D2";
+            label.style.borderRadius = "10px";
+            label.style.clear = "both";
+            label.style.cssFloat = "left";
+            label.style.height = "50px";
+            label.style.lineHeight = "50px";
+            label.style.margin = "10px auto 10px 10px";
+            label.style.width = "200px";
+            label.addEventListener("mouseover", function(event){
+                event.target.style.backgroundColor = "#818185";
+            }, false);
+            label.addEventListener("mouseleave", function(event){
+                event.target.style.backgroundColor = "#D2D2D2";
+            }, false);
+            label.addEventListener("click", this.sendFeedback.bind(this), false);
+            elements.push(opt);
+            elements.push(label);
+        break;
+        case 'textarea':
+        default:
+            opt = document.createElement("TEXTAREA");
+            opt.setAttribute('type', 'radio');
+            opt.setAttribute('name', option.id);
+            elements.push(opt);
+        break;
+    }
+    return elements;
 };
 
 // append fk to the document
@@ -150,11 +212,30 @@ Feedback.prototype.appendToBody = function(){
 
     
 var init_feedback = function(){
-    // ajax call to get feedback params
-    var settings = {
-        timing: 2000
+    // ajax call to get response
+    var response = {
+        timing: 2000,
+        survey: {
+            options: [
+                {
+                    id: 'abc',
+                    label: 'test01',
+                    type: 'radio'
+                },
+                {
+                    id: 'def',
+                    label: 'test02',
+                    type: 'radio'
+                },
+                {
+                    id: 'ghi',
+                    label: 'test03',
+                    type: 'radio'
+                }
+            ]
+        }
     };    
-    fdk = new Feedback(settings);
+    fdk = new Feedback(response);
     fdk.appendToBody();
 };
 
