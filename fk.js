@@ -50,18 +50,81 @@ Feedback.prototype.closeFeedbackForm = function () {
 }
 
 Feedback.prototype.sendFeedback = function (event) {
-    event.preventDefault();
-    console.log(event.target);
-    var feedback = event.target["feedback"].value;
-    if (feedback == null || feedback == "") {
-        alert("You have to fill the Feedback field");
-        return false;
-    }
-    else {
-        alert(feedback);
+    var data = this.serializeForm(this.form);
+    //event.preventDefault();
+    //console.log(event.target);
+    // var feedback = event.target["feedback"].value;
+    //var feedback = event.target.value;
+    //if (feedback == null || feedback == "") {
+    //    alert("You have to fill the Feedback field");
+    //}
+    //else {
+    //    alert(feedback);
+        alert(data);
         this.closeFeedbackForm();
-        return false;
-    }
+    //}
+    return false;
+}
+
+Feedback.prototype.serializeForm = function(form) {
+	if (!form || form.nodeName !== "FORM") {
+		return;
+	}
+	var i, j, q = [];
+	for (i = form.elements.length - 1; i >= 0; i = i - 1) {
+		if (form.elements[i].name === "") {
+			continue;
+		}
+		switch (form.elements[i].nodeName) {
+		case 'INPUT':
+			switch (form.elements[i].type) {
+			case 'text':
+			case 'hidden':
+			case 'password':
+			case 'button':
+			case 'reset':
+			case 'submit':
+				q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				break;
+			case 'checkbox':
+			case 'radio':
+				if (form.elements[i].checked) {
+					q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				}						
+				break;
+			case 'file':
+				break;
+			}
+			break;			 
+		case 'TEXTAREA':
+			q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+			break;
+		case 'SELECT':
+			switch (form.elements[i].type) {
+			case 'select-one':
+				q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				break;
+			case 'select-multiple':
+				for (j = form.elements[i].options.length - 1; j >= 0; j = j - 1) {
+					if (form.elements[i].options[j].selected) {
+						q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].options[j].value));
+					}
+				}
+				break;
+			}
+			break;
+		case 'BUTTON':
+			switch (form.elements[i].type) {
+			case 'reset':
+			case 'submit':
+			case 'button':
+				q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				break;
+			}
+			break;
+		}
+	}
+	return q.join("&");
 }
     
 Feedback.prototype.buildUp = function(){
@@ -104,8 +167,10 @@ Feedback.prototype.buildUp = function(){
     this.form.appendChild(this.buildSurvey());
     this.form.appendChild(i);
     this.form.appendChild(s);
-    
-    this.form.addEventListener("submit", this.sendFeedback.bind(this), false);
+    this.form.onsubmit = function(){
+        this.sendFeedback();//.bind(this)
+        return false;
+    }.bind(this);
     this.container.appendChild(this.form);    
 };
 
@@ -156,7 +221,7 @@ Feedback.prototype.buildForm = function(option){
     var elements = [];
     switch(option.type){
         case 'radio':
-            opt = document.createElement("INPUT");
+            var opt = document.createElement("INPUT");
             opt.setAttribute('type', 'radio');
             opt.setAttribute('name', option.id);
             opt.setAttribute('value', option.id);
@@ -165,8 +230,12 @@ Feedback.prototype.buildForm = function(option){
             opt.style.top = "0";
             opt.style.position = "absolute";
             opt.style.opacity = "0";
-            label = document.createElement("LABEL");
-            label.setAttribute('for', option.id);
+            opt.addEventListener("click", function(){
+            this.form.submit(); 
+            return false;
+            }, false);
+            var label = document.createElement("LABEL");
+            label.setAttribute('for', option.id);            
             var text = document.createTextNode(option.label);
             label.appendChild(text);
             label.style.cursor = "pointer";
@@ -184,7 +253,14 @@ Feedback.prototype.buildForm = function(option){
             label.addEventListener("mouseleave", function(event){
                 event.target.style.backgroundColor = "#D2D2D2";
             }, false);
-            label.addEventListener("click", this.sendFeedback.bind(this), false);
+            label.addEventListener("click", function(e){
+                // console.log(this.form); 
+                e.preventDefault();
+                opt.checked = true;
+                this.form.onsubmit.call(this.form)
+                //this.form.onsubmit(); 
+                return false;
+            }.bind(this), false);
             elements.push(opt);
             elements.push(label);
         break;
