@@ -3,7 +3,7 @@
 ////
 var fdk;
 
-var Feedback = function(settings){
+var Feedback = function(response){
     this.container = {};
     this.form = {};
     this.settings = {};
@@ -11,17 +11,20 @@ var Feedback = function(settings){
     this.settings.button_shown_at_build = false;
     this.settings.button_shown_after_close = true;
     this.settings.closing_button_shown = true;
-    if(settings && settings.hasOwnProperty('timing')){
-        this.settings.timing = settings.timing;
+    if(response && response.hasOwnProperty('timing')){
+        this.settings.timing = response.timing;
     }
-    if(settings && settings.hasOwnProperty('button_shown_at_build')){
-        this.settings.button_shown_at_build = settings.button_shown_at_build;
+    if(response && response.hasOwnProperty('button_shown_at_build')){
+        this.settings.button_shown_at_build = response.button_shown_at_build;
     }
-    if(settings && settings.hasOwnProperty('button_shown_after_close')){
-        this.settings.button_shown_after_close = settings.button_shown_after_close;
+    if(response && response.hasOwnProperty('button_shown_after_close')){
+        this.settings.button_shown_after_close = response.button_shown_after_close;
     }
-    if(settings && settings.hasOwnProperty('closing_button_shown')){
-        this.settings.closing_button_shown = settings.closing_button_shown;
+    if(response && response.hasOwnProperty('closing_button_shown')){
+        this.settings.closing_button_shown = response.closing_button_shown;
+    }
+    if(response && response.hasOwnProperty('survey')){
+        this.survey = response.survey;
     }
 };
 
@@ -37,8 +40,7 @@ Feedback.prototype.openFeedbackForm = function () {
 }
 
 Feedback.prototype.closeFeedbackForm = function () {
-    this.form["feedback"].value = "";
-    if(this.settings.button_shown_after_close){
+   if(this.settings.button_shown_after_close){
         this.button.style.opacity = "1";
     }
     this.button.addEventListener("click", this.openFeedbackForm.bind(this));
@@ -47,17 +49,76 @@ Feedback.prototype.closeFeedbackForm = function () {
 }
 
 Feedback.prototype.sendFeedback = function (event) {
-    event.preventDefault();
-    var feedback = event.target["feedback"].value;
-    if (feedback == null || feedback == "") {
-        alert("You have to fill the Feedback field");
-        return false;
-    }
-    else {
-        alert(feedback);
-        this.closeFeedbackForm();
-        return false;
-    }
+    var data = this.serializeForm(this.form);
+    var request = {};
+    request['data'] = data;
+    request['url'] = document.URL;
+    request = JSON.stringify(request);
+    console.log(request);
+    alert(request);
+    this.closeFeedbackForm();
+    return false;
+}
+
+Feedback.prototype.serializeForm = function(form) {
+	if (!form || form.nodeName !== "FORM") {
+		return;
+	}
+	var i, j, q = [];
+	for (i = form.elements.length - 1; i >= 0; i = i - 1) {
+		if (form.elements[i].name === "") {
+			continue;
+		}
+		switch (form.elements[i].nodeName) {
+		case 'INPUT':
+			switch (form.elements[i].type) {
+			case 'text':
+			case 'hidden':
+			case 'password':
+			case 'button':
+			case 'reset':
+			case 'submit':
+				q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				break;
+			case 'checkbox':
+			case 'radio':
+				if (form.elements[i].checked) {
+					q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				}						
+				break;
+			case 'file':
+				break;
+			}
+			break;			 
+		case 'TEXTAREA':
+			q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+			break;
+		case 'SELECT':
+			switch (form.elements[i].type) {
+			case 'select-one':
+				q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				break;
+			case 'select-multiple':
+				for (j = form.elements[i].options.length - 1; j >= 0; j = j - 1) {
+					if (form.elements[i].options[j].selected) {
+						q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].options[j].value));
+					}
+				}
+				break;
+			}
+			break;
+		case 'BUTTON':
+			switch (form.elements[i].type) {
+			case 'reset':
+			case 'submit':
+			case 'button':
+				q.push(form.elements[i].name + "=" + encodeURIComponent(form.elements[i].value));
+				break;
+			}
+			break;
+		}
+	}
+	return q.join("&");
 }
     
 Feedback.prototype.buildUp = function(){
@@ -85,23 +146,11 @@ Feedback.prototype.buildUp = function(){
         this.button.style.opacity = "0";
     }
     this.container.appendChild(this.button);
-    
-    //input element, text
-    var i = document.createElement("TEXTAREA");
-    i.setAttribute("name","feedback");
-    i.style.width = "90%";
-    i.style.height = "100px";
-
-    //input element, Submit button
-    var s = document.createElement("INPUT");
-    s.setAttribute("type","submit");
-    s.setAttribute("value","Submit");
-    s.style.marginTop = "1em";
-    
-    this.form.appendChild(i);
-    this.form.appendChild(s);
-    
-    this.form.addEventListener("submit", this.sendFeedback.bind(this), false);
+    this.form.appendChild(this.buildSurvey());
+    this.form.onsubmit = function(){
+        this.sendFeedback();//.bind(this)
+        return false;
+    }.bind(this);
     this.container.appendChild(this.form);    
 };
 
@@ -127,14 +176,99 @@ Feedback.prototype.buildButton = function(){
     image.style.left = "0";
     image.style.top = "0";
     image.style.marginLeft = "5px";
-    image.style.marginTop = "5px";
-    
+    image.style.marginTop = "5px";    
     // add element to button
     button.appendChild(image);
     // add event on button click
     button.addEventListener("click", this.openFeedbackForm.bind(this));
     // this.container.appendChild(button);
     return button;
+};
+
+Feedback.prototype.buildSurvey = function(){
+    if(this.survey && this.survey.hasOwnProperty('options')){
+        var div_survey = document.createElement("DIV");
+        for(var pos in this.survey.options){
+            var opts = this.buildForm(this.survey.options[pos]);
+            opts.forEach(function(opt){
+                div_survey.appendChild(opt);
+            });
+        }
+        return div_survey;
+    }
+};
+
+Feedback.prototype.buildForm = function(option){
+    var elements = [];
+    switch(option.type){
+        case 'radio':
+            var opt = document.createElement("INPUT");
+            opt.setAttribute('type', 'radio');
+            opt.setAttribute('name', option.group+"["+option.id+"]");
+            opt.setAttribute('value', option.id);
+            opt.setAttribute('id', option.id);
+            opt.setAttribute('class', 'option '+option.group);
+            opt.style.left = "0";
+            opt.style.top = "0";
+            opt.style.position = "absolute";
+            opt.style.opacity = "0";
+            opt.addEventListener("click", function(){
+                e.preventDefault();
+                opt.checked = true;
+                this.form.onsubmit.call(this.form)
+                return false;
+            }.bind(this), false);
+            var label = document.createElement("LABEL");
+            label.setAttribute('for', option.id);            
+            var text = document.createTextNode(option.label);
+            label.appendChild(text);
+            label.style.cursor = "pointer";
+            label.style.backgroundColor = "#D2D2D2";
+            label.style.borderRadius = "10px";
+            label.style.clear = "both";
+            label.style.cssFloat = "left";
+            label.style.height = "50px";
+            label.style.lineHeight = "50px";
+            label.style.margin = "10px auto 10px 10px";
+            label.style.width = "200px";
+            label.addEventListener("mouseover", function(event){
+                event.target.style.backgroundColor = "#818185";
+            }, false);
+            label.addEventListener("mouseleave", function(event){
+                event.target.style.backgroundColor = "#D2D2D2";
+            }, false);
+            label.addEventListener("click", function(e){
+                e.preventDefault();
+                // group_elements = document.getElementsByName(option.group+"[]");
+                group_elements = document.getElementsByClassName(option.group);
+                for(var i=0; i<group_elements.length; i++){
+                    group_elements[i].checked = false;
+                }
+                opt.checked = true;
+                this.form.onsubmit.call(this.form)
+                return false;
+            }.bind(this), false);
+            elements.push(opt);
+            elements.push(label);
+        break;
+        case 'submit':
+            //input element, Submit button
+            var s = document.createElement("INPUT");
+            s.setAttribute("type","submit");
+            s.setAttribute("value","Submit");
+            s.style.marginTop = "1em";
+            elements.push(s);
+        break;
+        case 'textarea':
+        default:
+            var opt = document.createElement("TEXTAREA");
+            opt.setAttribute('name', option.group+"["+option.id+"]");
+            opt.style.width = "90%";
+            opt.style.height = "100px";
+            elements.push(opt);            
+        break;
+    }
+    return elements;
 };
 
 // append fk to the document
@@ -150,11 +284,33 @@ Feedback.prototype.appendToBody = function(){
 
     
 var init_feedback = function(){
-    // ajax call to get feedback params
-    var settings = {
-        timing: 2000
+    // ajax call to get response
+    var response = {
+        timing: 2000,
+        survey: {
+            options: [
+                {
+                    id: 'abc',
+                    label: 'test01',
+                    type: 'radio',
+                    group: 'opts'
+                },
+                {
+                    id: 'def',
+                    label: 'test02',
+                    type: 'radio',
+                    group: 'opts'
+                },
+                {
+                    id: 'ghi',
+                    label: 'test03',
+                    type: 'radio',
+                    group: 'opts'
+                }
+            ]
+        }
     };    
-    fdk = new Feedback(settings);
+    fdk = new Feedback(response);
     fdk.appendToBody();
 };
 
