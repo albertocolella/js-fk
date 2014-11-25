@@ -51,18 +51,8 @@ Feedback.prototype.closeFeedbackForm = function () {
 
 Feedback.prototype.sendFeedback = function (event) {
     var data = this.serializeForm(this.form);
-    //event.preventDefault();
-    //console.log(event.target);
-    // var feedback = event.target["feedback"].value;
-    //var feedback = event.target.value;
-    //if (feedback == null || feedback == "") {
-    //    alert("You have to fill the Feedback field");
-    //}
-    //else {
-    //    alert(feedback);
-        alert(data);
-        this.closeFeedbackForm();
-    //}
+    alert(data);
+    this.closeFeedbackForm();
     return false;
 }
 
@@ -223,17 +213,20 @@ Feedback.prototype.buildForm = function(option){
         case 'radio':
             var opt = document.createElement("INPUT");
             opt.setAttribute('type', 'radio');
-            opt.setAttribute('name', option.id);
+            opt.setAttribute('name', option.group+"["+option.id+"]");
             opt.setAttribute('value', option.id);
             opt.setAttribute('id', option.id);
+            opt.setAttribute('class', 'option '+option.group);
             opt.style.left = "0";
             opt.style.top = "0";
             opt.style.position = "absolute";
             opt.style.opacity = "0";
             opt.addEventListener("click", function(){
-            this.form.submit(); 
-            return false;
-            }, false);
+                e.preventDefault();
+                opt.checked = true;
+                this.form.onsubmit.call(this.form)
+                return false;
+            }.bind(this), false);
             var label = document.createElement("LABEL");
             label.setAttribute('for', option.id);            
             var text = document.createTextNode(option.label);
@@ -254,11 +247,14 @@ Feedback.prototype.buildForm = function(option){
                 event.target.style.backgroundColor = "#D2D2D2";
             }, false);
             label.addEventListener("click", function(e){
-                // console.log(this.form); 
                 e.preventDefault();
+                // group_elements = document.getElementsByName(option.group+"[]");
+                group_elements = document.getElementsByClassName(option.group);
+                for(var i=0; i<group_elements.length; i++){
+                    group_elements[i].checked = false;
+                }
                 opt.checked = true;
                 this.form.onsubmit.call(this.form)
-                //this.form.onsubmit(); 
                 return false;
             }.bind(this), false);
             elements.push(opt);
@@ -268,7 +264,7 @@ Feedback.prototype.buildForm = function(option){
         default:
             opt = document.createElement("TEXTAREA");
             opt.setAttribute('type', 'radio');
-            opt.setAttribute('name', option.id);
+            opt.setAttribute('name', option.group+"["+option.id+"]");
             elements.push(opt);
         break;
     }
@@ -296,17 +292,20 @@ var init_feedback = function(){
                 {
                     id: 'abc',
                     label: 'test01',
-                    type: 'radio'
+                    type: 'radio',
+                    group: 'opts'
                 },
                 {
                     id: 'def',
                     label: 'test02',
-                    type: 'radio'
+                    type: 'radio',
+                    group: 'opts'
                 },
                 {
                     id: 'ghi',
                     label: 'test03',
-                    type: 'radio'
+                    type: 'radio',
+                    group: 'opts'
                 }
             ]
         }
