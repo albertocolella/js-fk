@@ -40,8 +40,7 @@ Feedback.prototype.openFeedbackForm = function () {
 }
 
 Feedback.prototype.closeFeedbackForm = function () {
-    this.form["feedback"].value = "";
-    if(this.settings.button_shown_after_close){
+   if(this.settings.button_shown_after_close){
         this.button.style.opacity = "1";
     }
     this.button.addEventListener("click", this.openFeedbackForm.bind(this));
@@ -51,7 +50,12 @@ Feedback.prototype.closeFeedbackForm = function () {
 
 Feedback.prototype.sendFeedback = function (event) {
     var data = this.serializeForm(this.form);
-    alert(data);
+    var request = {};
+    request['data'] = data;
+    request['url'] = document.URL;
+    request = JSON.stringify(request);
+    console.log(request);
+    alert(request);
     this.closeFeedbackForm();
     return false;
 }
@@ -142,21 +146,7 @@ Feedback.prototype.buildUp = function(){
         this.button.style.opacity = "0";
     }
     this.container.appendChild(this.button);
-    
-    //input element, text
-    var i = document.createElement("TEXTAREA");
-    i.setAttribute("name","feedback");
-    i.style.width = "90%";
-    i.style.height = "100px";
-
-    //input element, Submit button
-    var s = document.createElement("INPUT");
-    s.setAttribute("type","submit");
-    s.setAttribute("value","Submit");
-    s.style.marginTop = "1em";
     this.form.appendChild(this.buildSurvey());
-    this.form.appendChild(i);
-    this.form.appendChild(s);
     this.form.onsubmit = function(){
         this.sendFeedback();//.bind(this)
         return false;
@@ -207,6 +197,7 @@ Feedback.prototype.buildSurvey = function(){
         return div_survey;
     }
 };
+
 Feedback.prototype.buildForm = function(option){
     var elements = [];
     switch(option.type){
@@ -260,12 +251,21 @@ Feedback.prototype.buildForm = function(option){
             elements.push(opt);
             elements.push(label);
         break;
+        case 'submit':
+            //input element, Submit button
+            var s = document.createElement("INPUT");
+            s.setAttribute("type","submit");
+            s.setAttribute("value","Submit");
+            s.style.marginTop = "1em";
+            elements.push(s);
+        break;
         case 'textarea':
         default:
-            opt = document.createElement("TEXTAREA");
-            opt.setAttribute('type', 'radio');
+            var opt = document.createElement("TEXTAREA");
             opt.setAttribute('name', option.group+"["+option.id+"]");
-            elements.push(opt);
+            opt.style.width = "90%";
+            opt.style.height = "100px";
+            elements.push(opt);            
         break;
     }
     return elements;
