@@ -51,11 +51,17 @@ Feedback.prototype.closeFeedbackForm = function () {
 Feedback.prototype.sendFeedback = function (event) {
     var data = this.serializeForm(this.form);
     var request = {};
+    request['id'] = 'todo';
     request['data'] = data;
     request['url'] = document.URL;
     request = JSON.stringify(request);
     console.log(request);
-    alert(request);
+    //alert(request);
+    var xmlhttp = new XMLHttpRequest();
+    xmlhttp.open("POST",'http://localhost:8080/api/v1/feedbacks',true);
+    xmlhttp.setRequestHeader("Accept","application/vnd.api+json");
+    xmlhttp.setRequestHeader("Content-type","application/vnd.api+json");
+    xmlhttp.send(request);
     this.closeFeedbackForm();
     return false;
 }
