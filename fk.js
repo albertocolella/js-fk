@@ -62,12 +62,10 @@ Feedback.prototype.closeFeedbackForm = function () {
 Feedback.prototype.sendFeedback = function (event) {
   var data = this.serializeForm(this.form);
   var request = {};
-  //request['id'] = 'todo';
   request['data'] = data;
   request['url'] = document.URL;
   request = JSON.stringify(request);
   console.log(request);
-  //alert(request);
   var xmlhttp = new XMLHttpRequest();
   xmlhttp.open("POST", api_url + '/feedbacks',true);
   xmlhttp.setRequestHeader("Accept","application/vnd.api+json");
@@ -225,54 +223,72 @@ Feedback.prototype.buildForm = function(field){
   var div = document.createElement("DIV");
   switch(field.type){
     case 'radio':
-      var opt = document.createElement("INPUT");
-      opt.setAttribute('type', 'radio');
-      opt.setAttribute('name', field.group+"["+field.id+"]");
-      opt.setAttribute('value', field.id);
-      opt.setAttribute('id', field.id);
-      opt.setAttribute('class', 'option '+field.group);
-      opt.style.left = "0";
-      opt.style.top = "0";
-      opt.style.position = "absolute";
-      opt.style.opacity = "0";
-      opt.addEventListener("click", function(){
-        e.preventDefault();
-        opt.checked = true;
-        this.form.onsubmit.call(this.form)
-        return false;
-      }.bind(this), false);
-      var label = document.createElement("LABEL");
-      label.setAttribute('for', field.id);      
-      var text = document.createTextNode(field.label);
-      label.appendChild(text);
-      label.style.cursor = "pointer";
-      label.style.backgroundColor = "#D2D2D2";
-      label.style.borderRadius = "10px";
-      label.style.clear = "both";
-      label.style.cssFloat = "left";
-      label.style.height = "50px";
-      label.style.lineHeight = "50px";
-      label.style.margin = "10px auto 10px 10px";
-      label.style.width = "200px";
-      label.addEventListener("mouseover", function(event){
-        event.target.style.backgroundColor = "#818185";
-      }, false);
-      label.addEventListener("mouseleave", function(event){
-        event.target.style.backgroundColor = "#D2D2D2";
-      }, false);
-      label.addEventListener("click", function(e){
-        e.preventDefault();
-        // group_elements = document.getElementsByName(field.group+"[]");
-        group_elements = document.getElementsByClassName(field.group);
-        for(var i=0; i<group_elements.length; i++){
-          group_elements[i].checked = false;
+      if(field.elements){
+        
+        for(var i in field.elements){
+          element = field.elements[i];
+          var opt = document.createElement("INPUT");
+          opt.setAttribute('type', 'radio');
+          opt.setAttribute('name', field.id+"["+element.name+"]");
+          opt.setAttribute('value', element.value);
+          opt.setAttribute('id', field.id+'_'+element.name);
+          opt.style.left = "0";
+          opt.style.top = "0";
+          opt.style.position = "absolute";
+          opt.style.opacity = "0";
+         /* opt.addEventListener("click", function(){
+            e.preventDefault();
+            opt.checked = true;
+            console.log('click');
+            //this.form.onsubmit.call(this.form);
+            return false;
+          }.bind(this), false);*/
+          var label = document.createElement("LABEL");
+          label.setAttribute('for', field.id+'_'+element.name);      
+          var text = document.createTextNode(element.label);
+          label.appendChild(text);
+          label.style.cursor = "pointer";
+          label.style.backgroundColor = "#D2D2D2";
+          label.style.borderRadius = "10px";
+          label.style.clear = "both";
+          label.style.cssFloat = "left";
+          label.style.height = "50px";
+          label.style.lineHeight = "50px";
+          label.style.margin = "10px auto 10px 10px";
+          label.style.width = "200px";
+          /*label.addEventListener("mouseover", function(event){
+            event.target.style.backgroundColor = "#818185";
+          }, false);
+          label.addEventListener("mouseleave", function(event){
+            event.target.style.backgroundColor = "#D2D2D2";
+          }, false);*/
+          label.addEventListener("click", function(event){
+            event.preventDefault();
+            tmp = document.getElementById(event.target.getAttribute('for'));
+            var radios = event.target.parentNode.querySelectorAll('input[type=radio]');
+            for(var r=0; r<radios.length; r++){
+              radios[r].checked = false;
+              radios[r].parentNode.style.backgroundColor = "#D2D2D2";
+            }
+            if(!tmp.checked){
+              tmp.checked = true;
+              event.target.style.backgroundColor = "#818185";
+            } else {
+              tmp.checked = false;
+              event.target.style.backgroundColor = "#D2D2D2";
+            }
+            /*// group_elements = document.getElementsByName(field.group+"[]");
+            group_elements = document.getElementsByClassName(field.group);
+            for(var i=0; i<group_elements.length; i++){
+              group_elements[i].checked = false;
+            }
+            this.form.onsubmit.call(this.form)*/
+            return false;
+          }.bind(this), false);
+          label.appendChild(opt);
+          div.appendChild(label);
         }
-        opt.checked = true;
-        this.form.onsubmit.call(this.form)
-        return false;
-      }.bind(this), false);
-      div.appendChild(opt);
-      div.insertBefore(label, opt);
+      }
      // elements.push(label);
     break;
     case 'submit':
